@@ -9,8 +9,8 @@ import (
 
 var encodeCmd = &cobra.Command{
 	Use:   "encode",
-	Short: "Convert data to the output",
-	Long:  `It only support qrcode to stdout`,
+	Short: "encode data to the output",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("encode called")
 		encode.EncodToQrCode()

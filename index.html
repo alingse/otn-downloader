@@ -7,8 +7,10 @@
   <body>
     <h2>识别进度</h2>
     <div id="text-process"></div>
-    <h2>识别到的数据</h2>
+    <h2>识别到全部的数据</h2>
     <div id="text-result"></div>
+    <h2>识别到当前的数据</h2>
+    <div id="text-current-result"></div>
     <h2>错误</h2>
     <div id="error-text"></div>
     <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
@@ -22,20 +24,26 @@
 
       var request = {};
       function processText(decodedText) {
+        $("#text-current-result").text(decodedText);
         let dataArray = decodedText.split(":", 3);
-        if (dataArray.length <= 3) {
+        if (dataArray.length < 3) {
+          $("#error-text").text("lees 3");
           return;
         }
         let index = dataArray[0];
         let total = dataArray[1];
         let text = dataArray[2];
         if (request[index]) {
+          $("#error-text").text("exists index");
           return;
         }
         request[index] = text;
+        $("#error-text").text("set index");
         let lastText = $("#text-result").text();
         $("#text-result").text(lastText + text);
+        $("#error-text").text("set text");
         $("#text-process").text(index + " : " + total);
+        $("#error-text").text("set process");
       }
       function onScanSuccess(decodedText, decodedResult) {
         console.log(decodedText, decodedResult);

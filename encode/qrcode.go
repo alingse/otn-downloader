@@ -22,6 +22,6 @@ func EncodToQrCode() {
 		fmt.Printf("\033[0;0H")
 		buf.Reset()
 		fmt.Print()
-		time.Sleep(1 * time.Second)
+		time.Sleep(200 * time.Millisecond)
 	}
 }

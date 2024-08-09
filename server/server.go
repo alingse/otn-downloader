@@ -66,7 +66,7 @@ const indexHtml = `
 		request[index] = text;
 		let lastText = $('#text-result').text();
 		$('#text-result').text(lastText+text);
-		$('#text-process).text(index + ' : ' + total);
+		$('#text-process').text(index + ' : ' + total);
 	}
 	html5QrcodeScanner.render(onScanSuccess);
 </script>

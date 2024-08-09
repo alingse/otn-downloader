@@ -14,7 +14,8 @@ func EncodToQrCode() {
 	N := 100
 	buf := &bytes.Buffer{}
 	for i := 0; i < N; i++ {
-		text := "hello " + strconv.FormatInt(int64(i), 10)
+		text := "hello " + strconv.FormatInt(int64(i), 10) + "\n"
+		text := fmt.Sprintf("%d:%d:%s", i, N, text)
 		qrterminal.Generate(text, qrterminal.L, buf)
 		fmt.Println(len(buf.Bytes()))
 		_, _ = os.Stdout.Write(buf.Bytes())

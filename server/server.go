@@ -38,20 +38,36 @@ const indexHtml = `
 	<title>OTN Downloader Server</title>
 </head>
 <body>
-<h1>识别到的数据</h1>
+<h1>识别</h1>
+<h1>识别进度/h1>
+<div id="text-process"></div>
+<h2>识别到的数据</h2>
 <div id="text-result"></div>
 <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
 <script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js"></script>
 <div style="width: 500px" id="reader"></div>
 <script>
-	function onScanSuccess(decodedText, decodedResult) {
-		console.log(decodedText, decodedResult);
-		let lastText = $('#text-result').text();
-		$('#text-result').text(lastText+decodedText);
-	}
-
 	var html5QrcodeScanner = new Html5QrcodeScanner(
 		"reader", { fps: 10, qrbox: 250 });
+
+	var request = {};
+	function onScanSuccess(decodedText, decodedResult) {
+		console.log(decodedText, decodedResult);
+		let dataArray = decodedText.split(":", 3);
+		if (dataArray.length <= 3) {
+			return;
+		}
+		let index = dataArray[0];
+		let total = dataArray[1];
+		let text = dataArray[2];
+		if (request[index]) {
+			return;
+		}
+		request[index] = text;
+		let lastText = $('#text-result').text();
+		$('#text-result').text(lastText+text);
+		$('#text-process).text(index + ' : ' + total);
+	}
 	html5QrcodeScanner.render(onScanSuccess);
 </script>
 </body>

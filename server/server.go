@@ -38,13 +38,16 @@ const indexHtml = `
 	<title>OTN Downloader Server</title>
 </head>
 <body>
-<h1>访问</h1>
-<span>chrome://flags/#unsafely-treat-insecure-origin-as-secure</span>
+<h1>识别到的数据</h1>
+<div id="text-result"></div>
 <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js"></script>
 <div style="width: 500px" id="reader"></div>
 <script>
 	function onScanSuccess(decodedText, decodedResult) {
 		console.log(decodedText, decodedResult);
+		let lastText = $('#text-result').text();
+		$('#text-result').text(lastText+decodedText);
 	}
 
 	var html5QrcodeScanner = new Html5QrcodeScanner(

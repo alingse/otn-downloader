@@ -9,6 +9,8 @@
     <div id="text-process"></div>
     <h2>识别到的数据</h2>
     <div id="text-result"></div>
+    <h2>错误</h2>
+    <div id="error-text"></div>
     <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
     <script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js"></script>
     <div style="width: 500px" id="reader"></div>
@@ -19,8 +21,7 @@
       });
 
       var request = {};
-      function onScanSuccess(decodedText, decodedResult) {
-        console.log(decodedText, decodedResult);
+      function processText(decodedText) {
         let dataArray = decodedText.split(":", 3);
         if (dataArray.length <= 3) {
           return;
@@ -35,6 +36,14 @@
         let lastText = $("#text-result").text();
         $("#text-result").text(lastText + text);
         $("#text-process").text(index + " : " + total);
+      }
+      function onScanSuccess(decodedText, decodedResult) {
+        console.log(decodedText, decodedResult);
+        try {
+          processText(decodedText);
+        } catch (err) {
+          $("#error-text").text(err);
+        }
       }
       html5QrcodeScanner.render(onScanSuccess);
     </script>

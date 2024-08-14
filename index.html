@@ -1,59 +1,221 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>OTN Downloader Server</title>
-  </head>
-  <body>
-    <h2>识别进度</h2>
-    <div id="text-process"></div>
-    <h2>识别到全部的数据</h2>
-    <div id="text-result"></div>
-    <h2>识别到当前的数据</h2>
-    <div id="text-current-result"></div>
-    <h2>错误</h2>
-    <div id="error-text"></div>
-    <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
-    <script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js"></script>
-    <div style="width: 500px" id="reader"></div>
-    <script>
-      var html5QrcodeScanner = new Html5QrcodeScanner("reader", {
-        fps: 10,
-        qrbox: 250,
-      });
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OTN Downloader</title>
+<style>
+    body { font-family: Arial, sans-serif; }
+    h1 { text-align: center; }
+    h2 {font-size: 32px;}
+    p {font-size: 20px;}
+    .container { max-width: 80%; margin: 20px auto; padding: 20px; border: 1px solid #ccc; }
+    .description { color: #666;  text-align: center;}
+    input { margin: 10px 0; display: inline-block; vertical-align: middle; line-height: 20px;}
+    #filename, #progress-info { margin: 10px 0; }
+    #progress-bar { width: 30%; background-color: #ddd; }
+    #progress-bar-fill { height: 20px; background-color: #4CAF50; width: 0%; text-align: center; line-height: 20px; color: white; }
+    button { margin: 10px 5px; padding: 10px 20px; }
+</style>
+<script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>OTN Downloader</h1>
+    <p class="description">基于光学传输网络的单向下载工具</p>
+    <h2>设置</h2>
+    <div>
+      <span>FPS
+        <input type="number" id="fpsInput" placeholder="输入 FPS" value="10">
+      </span>
+      </div>
+    <button onclick="startDownload()">开始</button>
+    <h2>下载</h2>
+    <button onclick="clearData()">清空</button>
+    <div>下载文件名: <span id="filename"></span></div>
+    <div id="progress-bar">
+        <div id="progress-bar-fill">0%</div>
+    </div>
+    <div id="progress-info">下载进度: 0%</div>
+    <div id="estimated-time">预计完成时间: --:--:--</div>
+    <div>识别信息: <pre id="error-text"></pre></div>
+    <div>识别详情:
+      <pre id="detail-text"></pre>
+    </div>
+    <div>
+      <div style="width: 500px" id="reader"></div>
+    </div>
+</div>
+<script>
+    let progress = 0;
+    const progressBar = document.getElementById('progress-bar-fill');
+    const progressInfo = document.getElementById('progress-info');
+    const estimatedTime = document.getElementById('estimated-time');
 
-      var request = {};
-      function processText(decodedText) {
-        $("#text-current-result").text(decodedText);
-        let dataArray = decodedText.split(":", 3);
-        if (dataArray.length < 3) {
-          $("#error-text").text("lees 3");
-          return;
-        }
-        let index = dataArray[0];
-        let total = dataArray[1];
-        let text = dataArray[2];
-        if (request[index]) {
-          $("#error-text").text("exists index");
-          return;
-        }
-        request[index] = text;
-        $("#error-text").text("set index");
-        let lastText = $("#text-result").text();
-        $("#text-result").text(lastText + text);
-        $("#error-text").text("set text");
-        $("#text-process").text(index + " : " + total);
-        $("#error-text").text("set process");
+    function updateProgress(index, total) {
+      if (total === 0) {
+        return;
       }
-      function onScanSuccess(decodedText, decodedResult) {
+      const percent = index*100.0/total;
+      if (isNaN(percent)) {
+        return;
+      }
+
+      progress = percent;
+      progressBar.style.width = progress + '%';
+      progressBar.textContent = progress + '%';
+      progressInfo.textContent = `下载进度: ${progress}%`;
+      // 简单的预计时间模拟，实际应用中需要更复杂的计算
+      estimatedTime.textContent = `预计完成时间: ${Math.floor(progress / 10) * 10}秒`;
+    }
+
+    function newEmptyRequest() {
+      var request = {
+        lock: {},
+        meta: {
+          filename: '',
+          total: 0,
+        },
+        data: {},
+        download: false,
+      };
+      return request;
+    }
+
+    var html5QrcodeScanner = null;
+    var globalRequest = newEmptyRequest();
+
+    function syncGlobalRquest() {
+      $('#filename').text(globalRequest.meta.filename);
+      const index = Object.keys(globalRequest.lock).length;
+      updateProgress(index, globalRequest.meta.total);
+      $('#detail-text').text(JSON.stringify(globalRequest.data));
+
+      if (index === globalRequest.meta.total && globalRequest.meta.total > 0 && globalRequest.download === false){
+        downloadFinish();
+        globalRequest.download = true;
+      }
+    }
+
+    function processText(decodedText) {
+      let dataArray = decodedText.split(":", 3);
+      if (dataArray.length < 3) {
+        return;
+      }
+      let key = dataArray[0];
+      let index = dataArray[1];
+      let value = dataArray[2];
+      if (key === 'm') {
+        if (index === 'filename') {
+          globalRequest.meta.filename = value;
+        } else if (index === 'total') {
+          globalRequest.meta.total = parseInt(value);
+        }
+      } else if (key === 'd') {
+        if (globalRequest.lock[index]) {
+          return;
+        }
+        globalRequest.lock[index] = 1;
+        globalRequest.data[index] = value;
+      }
+      syncGlobalRquest();
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
         console.log(decodedText, decodedResult);
         try {
           processText(decodedText);
         } catch (err) {
-          $("#error-text").text(err);
+          $("#error-text").text(err.stack || "错误");
         }
+    }
+
+    function initScanner(){
+      if (html5QrcodeScanner !== null) {
+        return
       }
+
+      var fpsText = $("#fpsInput").text();
+      var fpsNumber = parseInt(fpsText, 10);
+      if (isNaN(fpsNumber)) {
+        fpsNumber = 10;
+      }
+
+      html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+        fps: fpsNumber,
+        qrbox: 250,
+      });
       html5QrcodeScanner.render(onScanSuccess);
-    </script>
-  </body>
+    }
+
+    function clearData() {
+      progress = 0;
+      updateProgress(0, 100);
+      globalRequest = newEmptyRequest();
+    }
+
+    function startDownload() {
+      clearData();
+      initScanner();
+    }
+
+    function decodeBase64StringsToUint8Array(base64Strings) {
+      let totalLength = 0;
+
+      // 首先，计算所有Base64字符串解码后的总长度
+      base64Strings.forEach(base64 => {
+          const padding = '='.repeat((4 - base64.length % 4) % 4);
+          const adjustedLength = Math.ceil((base64.length + padding.length) * 3 / 4);
+          totalLength += adjustedLength;
+      });
+
+      // 创建一个足够大的Uint8Array来存储所有解码后的数据
+      const mergedArray = new Uint8Array(totalLength);
+      let offset = 0;
+
+      // 遍历Base64字符串数组，并逐个解码追加到mergedArray中
+      base64Strings.forEach(base64 => {
+          const padding = '='.repeat((4 - base64.length % 4) % 4);
+          const base64WithPadding = base64 + padding;
+          const decodedString = window.atob(base64WithPadding);
+
+          // 将解码后的字符串（实际上是二进制数据的文本表示）转换为Uint8Array
+          const tempArray = new Uint8Array(decodedString.length);
+          for (let i = 0; i < decodedString.length; i++) {
+              tempArray[i] = decodedString.charCodeAt(i);
+          }
+
+          // 将tempArray的内容复制到mergedArray中
+          mergedArray.set(tempArray, offset);
+          offset += tempArray.length;
+      });
+
+      return mergedArray;
+    }
+
+    function createBlobWithData(filename, dataArray) {
+      const blob = new Blob([dataArray], { type: 'application/octet-stream' });
+      // 触发下载
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadFinish() {
+      let base64Strings = [];
+      for (let i = 0; i < globalRequest.meta.total; i++) {
+        base64Strings.push(globalRequest.data[String(i)]);
+      }
+      const dataArray = decodeBase64StringsToUint8Array(base64Strings);
+      createBlobWithData(globalRequest.meta.filename, dataArray);
+    }
+</script>
+</body>
 </html>

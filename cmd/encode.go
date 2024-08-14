@@ -13,7 +13,7 @@ var encodeCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("encode called")
-		encode.EncodToQrCode()
+		encode.EncodToQRCode("example.txt", 5, 3)
 	},
 }
 

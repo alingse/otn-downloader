@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/alignse/otn-downloader/encode"
 	"github.com/spf13/cobra"
 )
@@ -12,12 +10,24 @@ var encodeCmd = &cobra.Command{
 	Short: "encode data to the output",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("encode called")
-		encode.EncodToQRCode("example.txt", 5, 3)
+		cfg := encode.Config{
+			Fps:       *fps,
+			ChunkSize: *chunkSize,
+			Loop:      *loop,
+		}
+		encode.EncodToQRCode(*filename, cfg)
 	},
 }
 
+var fps *int
+var chunkSize *int
+var filename *string
+var loop *int
+
 func init() {
 	rootCmd.AddCommand(encodeCmd)
-	// encodeCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	fps = encodeCmd.Flags().Int("fps", 10, "the data encode fps")
+	loop = encodeCmd.Flags().Int("loop", 3, "the number of times process")
+	chunkSize = encodeCmd.Flags().IntP("chunk-size", "c", 60, "the chunk size of the input file")
+	filename = encodeCmd.Flags().StringP("input-file", "f", "", "the source files")
 }

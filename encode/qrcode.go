@@ -3,7 +3,9 @@ package encode
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
+	"path"
 	"strconv"
 	"time"
 
@@ -29,50 +31,80 @@ func printQRCode(v Value) {
 	qrterminal.Generate(text, qrterminal.L, os.Stdout)
 }
 
-func loadValues(filename string) []Value {
-	values := make([]Value, 0)
-	meta := Value{
+func loadValues(filepath string, cfg Config) ([]Value, []Value, error) {
+	_, filename := path.Split(filepath)
+	metas := make([]Value, 0, 2)
+	metas = append(metas, Value{
 		Key:   KeyMeta,
 		Index: "filename",
 		Value: filename,
-	}
-	values = append(values, meta)
-
-	N := 5
-	values = append(values, Value{
-		Key:   KeyMeta,
-		Index: "total",
-		Value: strconv.FormatInt(int64(N), 10),
 	})
 
-	for i := 0; i < N; i++ {
-		text := "hello " + strconv.FormatInt(int64(i), 10) + "\n"
-		value := base64.StdEncoding.EncodeToString([]byte(text))
-		values = append(values, Value{
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer file.Close()
+
+	datas := make([]Value, 0)
+	buf := make([]byte, cfg.ChunkSize)
+	i := 0
+	for {
+		n, err := file.Read(buf)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		value := base64.StdEncoding.EncodeToString(buf[:n])
+		data := Value{
 			Key:   KeyData,
 			Index: strconv.FormatInt(int64(i), 10),
 			Value: value,
-		})
+		}
+		datas = append(datas, data)
+		i++
 	}
-	return values
+	metas = append(metas, Value{
+		Key:   KeyMeta,
+		Index: "total",
+		Value: strconv.FormatInt(int64(i), 10),
+	})
+	return metas, datas, nil
 }
 
-var metaSleep = 10 * time.Second
+var metaSleep = 5 * time.Second
 
-func encodeToQRCode(filename string, fps int) {
-	d := 1 * time.Second / time.Duration(fps)
-	values := loadValues(filename)
-	for _, v := range values {
+func encodeToQRCode(filename string, cfg Config) error {
+	metas, datas, err := loadValues(filename, cfg)
+	if err != nil {
+		return err
+	}
+	for _, v := range metas {
 		printQRCode(v)
-		if v.Key == KeyMeta {
-			time.Sleep(metaSleep)
-		}
+		time.Sleep(metaSleep)
+	}
+
+	d := 1 * time.Second / time.Duration(cfg.Fps)
+	for _, v := range datas {
+		printQRCode(v)
 		time.Sleep(d)
 	}
+	return nil
 }
 
-func EncodToQRCode(filename string, fps int, loop int) {
-	for i := 0; i < loop; i++ {
-		encodeToQRCode(filename, fps)
+type Config struct {
+	Fps       int
+	ChunkSize int
+	Loop      int
+}
+
+func EncodToQRCode(filename string, cfg Config) {
+	for i := 0; i < cfg.Loop; i++ {
+		err := encodeToQRCode(filename, cfg)
+		if err != nil {
+			panic(err)
+		}
 	}
 }

@@ -30,7 +30,7 @@ var slices *[]string
 
 func init() {
 	rootCmd.AddCommand(encodeCmd)
-	fps = encodeCmd.Flags().Int("fps", 10, "the data encode fps")
+	fps = encodeCmd.Flags().Int("fps", 30, "the data encode fps")
 	loop = encodeCmd.Flags().Int("loop", 3, "the number of times process")
 	chunkSize = encodeCmd.Flags().IntP("chunk-size", "c", 60, "the chunk size of the input file")
 	filename = encodeCmd.Flags().StringP("input-file", "f", "", "the source files")

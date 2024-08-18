@@ -40,9 +40,9 @@
     <div id="progress-info">下载进度: 0%</div>
     <div id="estimated-time">预计完成时间: --:--:--</div>
     <div>错误信息: <pre id="error-text"></pre></div>
-    <!--div>识别详情:
+    <div>识别详情:
       <pre id="detail-text"></pre>
-    </div-->
+    </div>
     <div>
       <div style="width: 500px" id="reader"></div>
     </div>
@@ -52,6 +52,12 @@
     const progressBar = document.getElementById('progress-bar-fill');
     const progressInfo = document.getElementById('progress-info');
     const estimatedTime = document.getElementById('estimated-time');
+
+    function splitN(str, separator, n) {
+      const result = str.split(separator);
+      if (result.length <= n) return result;
+      return [...result.slice(0, n - 1), result.slice(n - 1).join(separator)];
+    }
 
     function updateProgress(index, total) {
       if (total === 0) {
@@ -92,7 +98,6 @@
       $('#filename').text(globalRequest.meta.filename);
       const index = Object.keys(globalRequest.lock).length;
       updateProgress(index, globalRequest.meta.total);
-      $('#detail-text').text(JSON.stringify(globalRequest.data));
 
       if (index === globalRequest.meta.total && globalRequest.meta.total > 0 && globalRequest.download === false){
         downloadFinish();
@@ -101,7 +106,7 @@
     }
 
     function processText(decodedText) {
-      let dataArray = decodedText.split(":", 3);
+      let dataArray = splitN(decodedText, ":", 3)
       if (dataArray.length < 3) {
         return;
       }
@@ -110,6 +115,7 @@
       let value = dataArray[2];
       if (key === 'm') {
         if (index === 'json') {
+          $('#detail-text').text(value);
           let obj = JSON.parse(value);
           globalRequest.meta.filename = obj.filename;
           globalRequest.meta.total = obj.total;
@@ -131,6 +137,7 @@
           processText(decodedText);
         } catch (err) {
           $("#error-text").text(err.stack || "错误");
+          $("#error-text").text($("#error-text").text() + decodedText);
         }
     }
 

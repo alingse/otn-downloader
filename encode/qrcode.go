@@ -2,6 +2,7 @@ package encode
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -25,6 +26,13 @@ type Value struct {
 	Value string
 }
 
+type MetaValue struct {
+	Filename string `json:"filename"`
+	Total int `json:"total"`
+	FileSize int `json:"file_size"`
+	ChunkSize int `json:"chunk_size"`
+}
+
 func printQRCode(v Value) {
 	fmt.Printf("\033[0;0H")
 	text := fmt.Sprintf("%s:%s:%s", v.Key, v.Index, v.Value)
@@ -32,14 +40,6 @@ func printQRCode(v Value) {
 }
 
 func loadValues(filepath string, cfg Config) ([]Value, []Value, error) {
-	_, filename := path.Split(filepath)
-	metas := make([]Value, 0, 2)
-	metas = append(metas, Value{
-		Key:   KeyMeta,
-		Index: "filename",
-		Value: filename,
-	})
-
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, nil, err
@@ -48,6 +48,7 @@ func loadValues(filepath string, cfg Config) ([]Value, []Value, error) {
 
 	datas := make([]Value, 0)
 	buf := make([]byte, cfg.ChunkSize)
+	s := 0
 	i := 0
 	for {
 		n, err := file.Read(buf)
@@ -57,6 +58,7 @@ func loadValues(filepath string, cfg Config) ([]Value, []Value, error) {
 		if err != nil {
 			return nil, nil, err
 		}
+		s += n
 		value := base64.StdEncoding.EncodeToString(buf[:n])
 		data := Value{
 			Key:   KeyData,
@@ -66,11 +68,23 @@ func loadValues(filepath string, cfg Config) ([]Value, []Value, error) {
 		datas = append(datas, data)
 		i++
 	}
-	metas = append(metas, Value{
-		Key:   KeyMeta,
-		Index: "total",
-		Value: strconv.FormatInt(int64(i), 10),
-	})
+
+	_, filename := path.Split(filepath)
+	meta := MetaValue{
+		Filename: filename,
+		Total: i,
+		FileSize: s,
+		ChunkSize: cfg.ChunkSize,
+
+	}
+	metaData, _ := json.Marshal(meta)
+	metas := []Value{
+		{
+			Key: KeyMeta,
+			Index: "json",
+			Value: string(metaData),
+		},
+	}
 	return metas, datas, nil
 }
 

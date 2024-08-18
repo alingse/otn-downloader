@@ -76,6 +76,8 @@
         meta: {
           filename: '',
           total: 0,
+          file_size: 0,
+          chunk_size: 0,
         },
         data: {},
         download: false,
@@ -107,17 +109,18 @@
       let index = dataArray[1];
       let value = dataArray[2];
       if (key === 'm') {
-        if (index === 'filename') {
-          globalRequest.meta.filename = value;
-        } else if (index === 'total') {
-          globalRequest.meta.total = parseInt(value);
+        if (index === 'json') {
+          let obj = JSON.parse(value);
+          globalRequest.meta.filename = obj.filename;
+          globalRequest.meta.total = obj.total;
+          globalRequest.meta.file_size = obj.file_size;
+          globalRequest.meta.chunk_size = obj.chunk_size;
         }
       } else if (key === 'd') {
-        if (globalRequest.lock[index]) {
-          return;
+        if (!globalRequest.lock[index]) {
+          globalRequest.lock[index] = 1;
+          globalRequest.data[index] = value;
         }
-        globalRequest.lock[index] = 1;
-        globalRequest.data[index] = value;
       }
       syncGlobalRquest();
     }

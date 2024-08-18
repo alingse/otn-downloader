@@ -95,9 +95,9 @@ func encodeToQRCode(filename string, cfg Config) error {
 	if err != nil {
 		return err
 	}
-	for _, _ = range metas {
-		//printQRCode(v)
-		//time.Sleep(metaSleep)
+	for _, v = range metas {
+		printQRCode(v)
+		time.Sleep(metaSleep)
 	}
 
 	d := 1 * time.Second / time.Duration(cfg.Fps)
@@ -107,7 +107,6 @@ func encodeToQRCode(filename string, cfg Config) error {
 		}
 		printQRCode(v)
 		time.Sleep(d)
-		os.Exit(0);
 	}
 	return nil
 }

@@ -95,7 +95,7 @@ func encodeToQRCode(filename string, cfg Config) error {
 	if err != nil {
 		return err
 	}
-	for _, v = range metas {
+	for _, v := range metas {
 		printQRCode(v)
 		time.Sleep(metaSleep)
 	}

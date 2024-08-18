@@ -59,6 +59,20 @@
       return [...result.slice(0, n - 1), result.slice(n - 1).join(separator)];
     }
 
+    function estimateRemainingTime(startAt, now, index, total) {
+      const elapsedTime = now - startAt;
+      const progress = index / total;
+      if (progress === 0) {
+        return '--:--:--';
+      }
+      const estimatedRemainingTime = (elapsedTime / progress) * (1 - progress);
+      const remainingSeconds = Math.ceil(estimatedRemainingTime / 1000);
+      const hours = Math.floor(remainingSeconds / 3600);
+      const minutes = Math.floor((remainingSeconds % 3600) / 60);
+      const seconds = remainingSeconds % 60;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
     function updateProgress(index, total) {
       if (total === 0) {
         return;
@@ -72,8 +86,6 @@
       progressBar.style.width = progress + '%';
       progressBar.textContent = progress + '%';
       progressInfo.textContent = `下载进度: ${progress}%`;
-      // 简单的预计时间模拟，实际应用中需要更复杂的计算
-      estimatedTime.textContent = `预计完成时间: ${Math.floor(progress / 10) * 10}秒`;
     }
 
     function newEmptyRequest() {
@@ -87,6 +99,7 @@
         },
         data: {},
         download: false,
+        startAt: new Date(),
       };
       return request;
     }
@@ -97,11 +110,17 @@
     function syncGlobalRquest() {
       $('#filename').text(globalRequest.meta.filename);
       const index = Object.keys(globalRequest.lock).length;
-      updateProgress(index, globalRequest.meta.total);
+      const total = globalRequest.meta.total;
+      updateProgress(index, total);
 
-      if (index === globalRequest.meta.total && globalRequest.meta.total > 0 && globalRequest.download === false){
+      if (index === total && total > 0 && globalRequest.download === false){
         downloadFinish();
         globalRequest.download = true;
+      }
+
+      if (index >= 0 && total > 0) {
+        const timeLeft = estimateRemainingTime(globalRequest.startAt, index, total)
+        estimatedTime.textContent = `预计完成时间: ${timeLeft}`;
       }
     }
 
@@ -115,7 +134,10 @@
       let value = dataArray[2];
       if (key === 'm') {
         if (index === 'json') {
-          $('#detail-text').text(value);
+          if (globalRequest.meta.total === 0){
+            globalRequest.startAt = new Date();
+          }
+
           let obj = JSON.parse(value);
           globalRequest.meta.filename = obj.filename;
           globalRequest.meta.total = obj.total;
@@ -137,7 +159,7 @@
           processText(decodedText);
         } catch (err) {
           $("#error-text").text(err.stack || "错误");
-          $("#error-text").text($("#error-text").text() + decodedText);
+          $('#detail-text').text(decodedText);
         }
     }
 
@@ -163,6 +185,9 @@
       progress = 0;
       updateProgress(0, 100);
       globalRequest = newEmptyRequest();
+      syncGlobalRquest();
+      $('#detail-text').text('');
+      $('#error-text').text('');
     }
 
     function startDownload() {

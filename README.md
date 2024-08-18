@@ -3,6 +3,11 @@
 single direction optical transport network (aka data over video)
 
 
+
+```bash
+otn-downloader encode --fps 10 --loop 100 --chunk-size 60 -f index.html -s 100 -s 104 -s 113 -s 124
+```
+
 ## Data Flow
 
 1. data -> otn-downloader -> qrcode video -> terminal

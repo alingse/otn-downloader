@@ -117,11 +117,6 @@
       const total = globalRequest.meta.total;
       updateProgress(index, total);
 
-      if (index === total && total > 0 && globalRequest.download === false){
-        downloadFinish();
-        globalRequest.download = true;
-      }
-
       $('#progress-slice').text(`切片进度: ${index}/${total}`);
       $('#progress-slice-current').text(`当前切片: ${globalRequest.currentIndex}`);
 
@@ -140,8 +135,14 @@
             }
           }
         }
-
         $('#progress-slice-miss').text(`切片缺失: ${missIndex.join(" ")}`);
+      } else {
+        $('#progress-slice-miss').text(`切片缺失: `);
+      }
+
+      if (index === total && total > 0 && globalRequest.download === false){
+        downloadFinish();
+        globalRequest.download = true;
       }
     }
 

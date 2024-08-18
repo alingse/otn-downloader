@@ -95,15 +95,19 @@ func encodeToQRCode(filename string, cfg Config) error {
 	if err != nil {
 		return err
 	}
-	for _, v := range metas {
-		printQRCode(v)
-		time.Sleep(metaSleep)
+	for _, _ = range metas {
+		//printQRCode(v)
+		//time.Sleep(metaSleep)
 	}
 
 	d := 1 * time.Second / time.Duration(cfg.Fps)
-	for _, v := range datas {
+	for i, v := range datas {
+		if len(cfg.Slices) > 0 && !cfg.Slices[i] {
+			continue
+		}
 		printQRCode(v)
 		time.Sleep(d)
+		os.Exit(0);
 	}
 	return nil
 }
@@ -112,6 +116,7 @@ type Config struct {
 	Fps       int
 	ChunkSize int
 	Loop      int
+	Slices 	  map[int]bool
 }
 
 func EncodToQRCode(filename string, cfg Config) {

@@ -103,6 +103,10 @@ func encodeToQRCode(filename string, cfg Config) error {
 	d := 1 * time.Second / time.Duration(cfg.Fps)
 	for i, v := range datas {
 		if len(cfg.Slices) > 0 && !cfg.Slices[i] {
+
+
+
+
 			continue
 		}
 		printQRCode(v)

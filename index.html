@@ -38,6 +38,9 @@
         <div id="progress-bar-fill">0%</div>
     </div>
     <div id="progress-info">下载进度: 0%</div>
+    <div id="progress-slice">切片进度: </div>
+    <div id="progress-slice-miss">切片缺失: </div>
+    <div id="progress-slice-current">当前切片: </div>
     <div id="estimated-time">预计完成时间: --:--:--</div>
     <div>错误信息: <pre id="error-text"></pre></div>
     <div>识别详情:
@@ -100,6 +103,7 @@
         data: {},
         download: false,
         startAt: new Date(),
+        currentIndex: 0,
       };
       return request;
     }
@@ -118,9 +122,26 @@
         globalRequest.download = true;
       }
 
+      $('#progress-slice').text(`切片进度: ${index}/${total}`);
+      $('#progress-slice-current').text(`当前切片: ${globalRequest.currentIndex}`);
+
       if (index >= 0 && total > 0) {
-        const timeLeft = estimateRemainingTime(globalRequest.startAt, index, total)
+        const timeLeft = estimateRemainingTime(globalRequest.startAt, new Date(), index, total)
         estimatedTime.textContent = `预计完成时间: ${timeLeft}`;
+      }
+      if (total >0 && index < total) {
+        let missIndex = [];
+        for (let i =0; i < total; i ++) {
+          if(!globalRequest.lock[i]) {
+            missIndex.push(i);
+            if (missIndex.length > 10) {
+              missIndex.push("...");
+              break;
+            }
+          }
+        }
+
+        $('#progress-slice-miss').text(`切片缺失: ${missIndex.join(" ")}`);
       }
     }
 
@@ -145,6 +166,7 @@
           globalRequest.meta.chunk_size = obj.chunk_size;
         }
       } else if (key === 'd') {
+        globalRequest.currentIndex = index;
         if (!globalRequest.lock[index]) {
           globalRequest.lock[index] = 1;
           globalRequest.data[index] = value;

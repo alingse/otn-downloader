@@ -9,19 +9,19 @@ a downloader based on the single direction optical transport network (aka data o
 
 ## Quick Start
 
-1. Install the encode cli 安装 cli 工具
+1. 安装 cli 工具
 
 ```bash
 go install github.com/alingse/otn-downloader@master
 ```
 
 
-2. Use phone and visit https://alingse.github.io/otn-downloader/index.html
+2. 访问 https://alingse.github.io/otn-downloader/index.html
 
 点击开始，并给一下摄像头权限，如果有手机支架，建议使用手机支架。
 
 
-3. Encode and print the data 将数据转换为二维码流
+3. 将数据转换为二维码流
 
 ```bash
 otn-downloader encode --fps 10 --loop 10 --chunk-size 60 -f index.html
@@ -34,7 +34,7 @@ otn-downloader encode --fps 10 --loop 100 --chunk-size 60 -f index.html -s 100 -
 ```
 
 
-## Data Flow
+## 数据流向
 
 1. data -> otn-downloader -> qrcode video -> terminal
 

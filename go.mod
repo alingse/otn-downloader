@@ -1,4 +1,4 @@
-module github.com/alignse/otn-downloader
+module github.com/alingse/otn-downloader
 
 go 1.22
 

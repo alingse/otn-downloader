@@ -12,11 +12,11 @@ a downloader based on the single direction optical transport network (aka data o
 1. 安装 cli 工具
 
 ```bash
-go install github.com/alingse/otn-downloader@master
+go install github.com/alingse/otn-downloader@main
 ```
 
 
-2. 访问 https://alingse.github.io/otn-downloader/index.html
+2. 手机访问 https://alingse.github.io/otn-downloader/index.html
 
 点击开始，并给一下摄像头权限，如果有手机支架，建议使用手机支架。
 

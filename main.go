@@ -1,6 +1,6 @@
 package main
 
-import "github.com/alignse/otn-downloader/cmd"
+import "github.com/alingse/otn-downloader/cmd"
 
 func main() {
 	cmd.Execute()

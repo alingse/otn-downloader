@@ -3,7 +3,7 @@ package cmd
 import (
 	"strconv"
 
-	"github.com/alignse/otn-downloader/encode"
+	"github.com/alingse/otn-downloader/encode"
 	"github.com/spf13/cobra"
 )
 

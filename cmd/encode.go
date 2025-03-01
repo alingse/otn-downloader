@@ -27,11 +27,13 @@ var encodeCmd = &cobra.Command{
 	},
 }
 
-var fps *int
-var chunkSize *int
-var filename *string
-var loop *int
-var slices *[]string
+var (
+	fps       *int
+	chunkSize *int
+	filename  *string
+	loop      *int
+	slices    *[]string
+)
 
 func init() {
 	rootCmd.AddCommand(encodeCmd)
@@ -43,11 +45,13 @@ func init() {
 }
 
 func parseInts(strValues []string) map[int]bool {
-	var result = map[int]bool{}
+	result := map[int]bool{}
+
 	for _, str := range strValues {
 		if val, err := strconv.Atoi(str); err == nil {
 			result[val] = true
 		}
 	}
+
 	return result
 }

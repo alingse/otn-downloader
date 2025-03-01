@@ -51,14 +51,17 @@ func loadValues(filepath string, cfg Config) ([]Value, []Value, error) {
 	buf := make([]byte, cfg.ChunkSize)
 	s := 0
 	i := 0
+
 	for {
 		n, err := file.Read(buf)
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			return nil, nil, err
 		}
+
 		s += n
 		value := base64.StdEncoding.EncodeToString(buf[:n])
 		data := Value{
@@ -85,29 +88,34 @@ func loadValues(filepath string, cfg Config) ([]Value, []Value, error) {
 			Value: string(metaData),
 		},
 	}
+
 	return metas, datas, nil
 }
 
-var metaSleep = 5 * time.Second
+const metaSleep = 5 * time.Second
 
 func encodeToQRCode(filename string, cfg Config) error {
 	metas, datas, err := loadValues(filename, cfg)
 	if err != nil {
 		return err
 	}
+
 	for _, v := range metas {
 		printQRCode(v)
 		time.Sleep(metaSleep)
 	}
 
 	d := 1 * time.Second / time.Duration(cfg.Fps)
+
 	for i, v := range datas {
 		if len(cfg.Slices) > 0 && !cfg.Slices[i] {
 			continue
 		}
+
 		printQRCode(v)
 		time.Sleep(d)
 	}
+
 	return nil
 }
 

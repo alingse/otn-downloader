@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
 	"strconv"
@@ -27,10 +28,10 @@ type Value struct {
 }
 
 type MetaValue struct {
-	Filename string `json:"filename"`
-	Total int `json:"total"`
-	FileSize int `json:"file_size"`
-	ChunkSize int `json:"chunk_size"`
+	Filename  string `json:"filename"`
+	Total     int    `json:"total"`
+	FileSize  int    `json:"file_size"`
+	ChunkSize int    `json:"chunk_size"`
 }
 
 func printQRCode(v Value) {
@@ -71,16 +72,15 @@ func loadValues(filepath string, cfg Config) ([]Value, []Value, error) {
 
 	_, filename := path.Split(filepath)
 	meta := MetaValue{
-		Filename: filename,
-		Total: i,
-		FileSize: s,
+		Filename:  filename,
+		Total:     i,
+		FileSize:  s,
 		ChunkSize: cfg.ChunkSize,
-
 	}
 	metaData, _ := json.Marshal(meta)
 	metas := []Value{
 		{
-			Key: KeyMeta,
+			Key:   KeyMeta,
 			Index: "json",
 			Value: string(metaData),
 		},
@@ -103,10 +103,6 @@ func encodeToQRCode(filename string, cfg Config) error {
 	d := 1 * time.Second / time.Duration(cfg.Fps)
 	for i, v := range datas {
 		if len(cfg.Slices) > 0 && !cfg.Slices[i] {
-
-
-
-
 			continue
 		}
 		printQRCode(v)
@@ -119,14 +115,14 @@ type Config struct {
 	Fps       int
 	ChunkSize int
 	Loop      int
-	Slices 	  map[int]bool
+	Slices    map[int]bool
 }
 
 func EncodToQRCode(filename string, cfg Config) {
-	for i := 0; i < cfg.Loop; i++ {
+	for range cfg.Loop {
 		err := encodeToQRCode(filename, cfg)
 		if err != nil {
-			panic(err)
+			log.Fatalf("encode file to QRCode failed %+v", err)
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/alingse/otn-downloader/encode"
@@ -12,6 +13,10 @@ var encodeCmd = &cobra.Command{
 	Short: "encode data to the output",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		if *filename == "" {
+			log.Fatalf("miss input file")
+		}
+
 		cfg := encode.Config{
 			Fps:       *fps,
 			ChunkSize: *chunkSize,
@@ -32,7 +37,7 @@ func init() {
 	rootCmd.AddCommand(encodeCmd)
 	fps = encodeCmd.Flags().Int("fps", 30, "the data encode fps")
 	loop = encodeCmd.Flags().Int("loop", 3, "the number of times process")
-	chunkSize = encodeCmd.Flags().IntP("chunk-size", "c", 60, "the chunk size of the input file")
+	chunkSize = encodeCmd.Flags().IntP("chunk-size", "c", 60, "the chunk byte size of the input file")
 	filename = encodeCmd.Flags().StringP("input-file", "f", "", "the source files")
 	slices = encodeCmd.Flags().StringSliceP("slices", "s", []string{}, "this miss slice of the chunks")
 }
